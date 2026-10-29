@@ -1,0 +1,41 @@
+[Unit]
+Description=Fruitstand Print Hub (local office print service)
+Documentation=file:///opt/printhub/current/docs/OPERATIONS.md
+After=network-online.target cups.service
+Wants=network-online.target cups.service
+
+[Service]
+Type=simple
+User=printhub
+Group=printhub
+EnvironmentFile=/etc/printhub/printhub.env
+ExecStart=/opt/printhub/current/venv/bin/printhub serve
+Restart=on-failure
+RestartSec=3
+# Give in-flight submissions a moment to settle on stop.
+TimeoutStopSec=20
+
+# --- hardening: the service only needs its data/log dirs and the CUPS socket ---
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+ReadWritePaths=/var/lib/printhub /var/log/printhub
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Open the Print Hub dashboard in a dedicated browser window on the station.
+#
+# Mode comes from ~/.config/printhub/station.conf (written by setup-station.sh):
+#   PRINTHUB_DISPLAY=window   maximized app window (default; title bar & Alt+Tab available)
+#   PRINTHUB_DISPLAY=kiosk    full screen, no browser UI
+#
+# Maintenance exit: Ctrl+Shift+Q or Alt+F4 closes the window. This script does
+# NOT relaunch it, so an administrator always gets the desktop back. Reopen it
+# from the "Print Hub" menu/desktop icon.
+set -u
+CONF="$HOME/.config/printhub/station.conf"
+[[ -f "$CONF" ]] && . "$CONF"
+URL="${PRINTHUB_URL:-http://127.0.0.1:8080/}"
+DISPLAY_MODE="${PRINTHUB_DISPLAY:-window}"
+PROFILE="$HOME/.config/printhub/browser-profile"
+mkdir -p "$PROFILE"
+
+# Wait (up to 60 s) for the service after boot instead of showing an error page.
+for _ in $(seq 1 60); do
+  curl -fsS "${URL%/}/api/health" >/dev/null 2>&1 && break
+  sleep 1
+done
+
+for b in chromium chromium-browser google-chrome google-chrome-stable; do
+  if command -v "$b" >/dev/null 2>&1; then
+    args=(--user-data-dir="$PROFILE" --no-first-run --disable-translate --disable-features=Translate
+          --password-store=basic --disable-session-crashed-bubble --overscroll-history-navigation=0
+          --app="$URL")
+    [[ "$DISPLAY_MODE" == kiosk ]] && args+=(--kiosk) || args+=(--start-maximized)
+    exec "$b" "${args[@]}"
+  fi
+done
+
+if command -v firefox >/dev/null 2>&1; then
+  # Firefox has no app-window mode; kiosk is full screen, otherwise a normal window.
+  [[ "$DISPLAY_MODE" == kiosk ]] && exec firefox --kiosk --new-instance --profile "$PROFILE" "$URL"
+  exec firefox --new-window "$URL"
+fi
+
+zenity --error --text="No supported browser found (install Chromium)." 2>/dev/null || echo "No supported browser found" >&2
+exit 1

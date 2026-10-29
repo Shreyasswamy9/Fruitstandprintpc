@@ -1,0 +1,11 @@
+[Unit]
+Description=Print Hub database backup
+
+[Service]
+Type=oneshot
+User=printhub
+Group=printhub
+EnvironmentFile=/etc/printhub/printhub.env
+ExecStart=/opt/printhub/current/venv/bin/printhub backup /var/lib/printhub/backups
+# Keep 14 daily backups.
+ExecStartPost=/bin/sh -c 'ls -1t /var/lib/printhub/backups/printhub-*.sqlite3 | tail -n +15 | xargs -r rm -f'

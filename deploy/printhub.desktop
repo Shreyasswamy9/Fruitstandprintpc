@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Print Hub
+Comment=Fruitstand office print hub
+Exec=/usr/local/bin/printhub-kiosk
+Icon=printer
+Terminal=false
+Categories=Office;
+X-GNOME-Autostart-Delay=3

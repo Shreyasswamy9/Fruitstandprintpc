@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Run the Print Hub CLI as the service user with the service's configuration.
+#   sudo printhub-admin create-admin alex
+#   sudo printhub-admin check
+#   sudo printhub-admin backup /var/lib/printhub/backups
+set -euo pipefail
+[[ $EUID -eq 0 ]] || { echo "Run with sudo." >&2; exit 1; }
+exec sudo -u printhub bash -c 'set -a; . /etc/printhub/printhub.env; set +a; exec /opt/printhub/current/venv/bin/printhub "$@"' printhub-admin "$@"
